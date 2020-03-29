@@ -10,12 +10,26 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 @Component
 public class PositionService implements DisposableBean, Runnable {
+
+    @Value("${tracker.mqtt.host}")
+    private String mqttHost;
+
+    @Value("${tracker.mqtt.port}")
+    private Long mqttPort;
+
+    @Value("${tracker.mqtt.user}")
+    private String mqttUser;
+
+    @Value("${tracker.mqtt.password}")
+    private String mqttPassword;
 
     private boolean running = true;
     private Thread thread;
@@ -36,13 +50,13 @@ public class PositionService implements DisposableBean, Runnable {
 
         try {
             String mqttClientId = "tracker-broker-" + UUID.randomUUID().toString();
-            IMqttClient client = new MqttClient("tcp://media:8883", mqttClientId);
+            IMqttClient client = new MqttClient("tcp://" + mqttHost + ":" + mqttPort, mqttClientId);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setAutomaticReconnect(true);
             options.setCleanSession(true);
             options.setConnectionTimeout(10);
-            options.setUserName("yyyyyyyyyyyyyy");
-            options.setPassword("xxxxxxxxxxxxxx".toCharArray());
+            options.setUserName(mqttUser);
+            options.setPassword(mqttPassword.toCharArray());
             client.connect(options);
 
             CountDownLatch receivedSignal = new CountDownLatch(10);
